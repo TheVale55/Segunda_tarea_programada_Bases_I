@@ -1,0 +1,83 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[FiltraCantidad]    Script Date: 27/09/2023 23:23:53 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[FiltraCantidad] 
+	@Cantidad VARCHAR(128)	--El valor de texto que se usa para seleccionar la cantidad de filas a mostrar
+	,@IP VARCHAR(64) --Dirección ip para agregar al event log
+	,@User VARCHAR(16) --User utilizado para agregar al event log
+AS
+
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY 
+		DECLARE @Flag INT; --Bandera para saber si el valor ingresado no es entero
+
+		IF(@Cantidad='')	-- Se valida si el parámetro ingresado es vacío
+		BEGIN 
+			--Se hace la selección de las columnas que se desean mostrar
+			SELECT A.Nombre 'Artículo'
+			, A.Precio 'Precio'
+			FROM dbo.Articulo A
+			WHERE A.EsActivo=1
+			ORDER BY Nombre --Se hace el sort por nombre de forma ascendente
+		END
+
+		ELSE --Si el parámetro no era vacío
+		BEGIN
+			IF(ISNUMERIC(@Cantidad) = 1) --Se verifica si el valor ingresado es numérico
+			BEGIN
+				DECLARE @CantidadEntera INT = CAST(@Cantidad as INT) --Se parsea el parámetro ingresado a uno entero y se guarda en una variable
+				--Se hace la selección de las columnas que se desean mostrar
+			
+				SELECT A.Codigo 'Código'
+					, A.Nombre 'Artículo'
+					, B.Nombre 'Clase'
+					, A.Precio 'Precio'
+					--Se crea una refencia de las tablas Articulo y ClaseArticulo con A y B respectivamente y se extrae el nombre de la clase
+					FROM dbo.Articulo A INNER JOIN dbo.ClaseArticulo B ON A.idClaseArticulo = B.id 
+					WHERE A.EsActivo=1
+					ORDER BY A.Nombre --Se hace el sort por nombre de forma ascendente
+					OFFSET 0 ROWS
+					FETCH NEXT @CantidadEntera ROWS ONLY; --Se selecciona la cantidad de filas a mostrar
+			END
+
+			ELSE --Si no es numérico, setea @Flag con 1 para mostrar el error.
+			BEGIN
+				SET @Flag=1;
+			END
+		END
+		
+		INSERT INTO dbo.EventLog
+			VALUES(
+				'{TipoAccion=<Consulta por cantidad> Description=<'+@Cantidad+'>}'
+				, (SELECT id FROM Usuario WHERE Usuario.UserName = @User)
+				, @IP
+				, GETDATE())
+		IF(@Flag=1) --Como mensaje de que el valor ingresado no es numérico
+		BEGIN
+			PRINT @Flag;
+			RETURN @Flag;
+		END
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+		);
+	END CATCH
+	
+	SET NOCOUNT OFF;
+END
