@@ -1,0 +1,42 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[SelectInicio]    Script Date: 27/09/2023 23:26:26 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[SelectInicio] 
+	
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+	BEGIN TRY
+
+		SELECT A.Codigo 'Código'
+		, A.Nombre 'Artículo'
+		, B.Nombre 'Clase'
+		, A.Precio 'Precio'
+		FROM dbo.Articulo A INNER JOIN dbo.ClaseArticulo B ON A.idClaseArticulo = B.id
+		WHERE A.EsActivo=1
+		ORDER BY A.Nombre --Se hace el sort por nombre de forma ascendente
+
+	SET NOCOUNT OFF;
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+		);
+	END CATCH
+
+END
