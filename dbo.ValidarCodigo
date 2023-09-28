@@ -1,0 +1,46 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[ValidarCodigo]    Script Date: 27/09/2023 23:26:54 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[ValidarCodigo]
+	@Codigo VARCHAR(32)
+	
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+	BEGIN TRY
+
+		IF EXISTS(SELECT 1 FROM dbo.Articulo A WHERE A.Codigo=@Codigo)
+			BEGIN
+				PRINT 1
+				RETURN 1
+			END
+		ELSE
+			BEGIN 
+				PRINT 0
+				RETURN 0
+			END
+
+	SET NOCOUNT OFF;
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+		);
+	END CATCH
+
+END
