@@ -1,0 +1,108 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[Actualizar]    Script Date: 27/09/2023 23:18:28 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[Actualizar]
+	@CodigoArticulo VARCHAR(32)
+	,@NuevoClase VARCHAR(64)		--
+	,@NuevoCodigo VARCHAR(32)	--Valores para agregar articulo
+	,@NuevoNombre VARCHAR(128)	--
+	,@NuevoPrecio MONEY			--
+	,@IP VARCHAR(64) --Dirección ip para agregar al event log
+	,@User VARCHAR(16) --User utilizado para agregar al event log
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+	BEGIN TRY
+		
+		--Estas variables guardan los datos antiguos para la entrada en la bitacora del EventLog
+		DECLARE @ViejoIdClase INT;
+		SET @ViejoIdClase=(SELECT A.IdClaseArticulo FROM Articulo A WHERE A.Codigo=@CodigoArticulo)
+		DECLARE @ViejoNombre VARCHAR(128);
+		SET @ViejoNombre=(SELECT A.Nombre FROM Articulo A WHERE A.Codigo=@CodigoArticulo);
+		DECLARE @ViejoPrecio MONEY;
+		SET @ViejoPrecio=(SELECT A.Precio FROM Articulo A WHERE A.Codigo=@CodigoArticulo)
+		DECLARE @IdArticulo INT;
+		SET @IdArticulo=(SELECT A.id FROM Articulo A WHERE A.Codigo=@CodigoArticulo);
+
+		--Estas variables se utilizan como identificadores para saber si el articulo se modifica o no
+		DECLARE @TipoAccion VARCHAR(128);
+		SET @TipoAccion='Modificación de articulo exitoso'; --Si el articulo entra en algún if cambia a no exitoso
+		DECLARE @DescripcionError VARCHAR(128);
+		SET @DescripcionError=''	--Va a guardar el error en caso de que lo haya
+		DECLARE @Flag INT;
+		SET @Flag=0;	--Bandera que funciona como indicador de si se agregó o no 
+
+		IF NOT EXISTS (SELECT 1 FROM dbo.Articulo WHERE Articulo.Nombre=@NuevoNombre) --Se valida que no exista el mismo nombre
+		OR @NuevoNombre=@ViejoNombre												  --O que sea el mismo que tenía
+		BEGIN
+			IF NOT EXISTS (SELECT 1 FROM dbo.Articulo WHERE Articulo.Codigo=@NuevoCodigo)
+			OR @NuevoCodigo=@CodigoArticulo--Se valida si existe el mismo codigo
+			BEGIN
+				BEGIN TRANSACTION 
+					UPDATE dbo.Articulo
+					SET IdClaseArticulo=(SELECT A.id FROM ClaseArticulo A WHERE A.Nombre=@NuevoClase)
+					,Codigo=@NuevoCodigo
+					,Nombre=@NuevoNombre
+					,Precio=@NuevoPrecio
+					WHERE Codigo=@CodigoArticulo
+				
+				COMMIT TRANSACTION
+			END
+
+			ELSE --No existe, entonces se actualiza el articulo
+			BEGIN
+				SET @TipoAccion='Modificación de articulo no exitoso';
+				SET @DescripcionError='código de articulo duplicado';
+				SET @Flag=2;
+			END
+		END
+
+		ELSE --Si existe el nombre deseado
+		BEGIN
+			SET @TipoAccion='Modificación de articulo no exitoso';
+			SET @DescripcionError='nombre de articulo duplicado';
+			SET @Flag=1;
+		END
+
+		INSERT INTO dbo.EventLog --Se realiza la inserción a la tabla EventLog
+			VALUES(
+				'{TipoAccion=<'+@TipoAccion
+				+'> Description=<'
+				+CAST(@IdArticulo AS VARCHAR(64))+'>,'
+				+'<'+CAST(@ViejoIdClase AS VARCHAR(64))+'>,'
+				+'<'+@CodigoArticulo+'>,'
+				+'<'+@ViejoNombre+'>,'
+				+'<'+CAST(@ViejoPrecio AS VARCHAR(64))+'>,'
+				+'<'+CAST(@NuevoClase AS VARCHAR(64))+'>,'
+				+'<'+@NuevoCodigo+'>,'
+				+'<'+@NuevoNombre+'>,'
+				+'<'+CAST(@NuevoPrecio AS VARCHAR(64))+'>,'
+				+'<'+@DescripcionError+'>}'
+				, (SELECT id FROM Usuario WHERE Usuario.UserName = @User)
+				, @IP
+				, GETDATE())
+	SET NOCOUNT OFF;
+	RETURN @Flag; --Retorna la bandera para saber si se agregó o no.
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+		);
+	END CATCH
+
+END
