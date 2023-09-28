@@ -1,0 +1,94 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[Insertar]    Script Date: 27/09/2023 23:25:28 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[Insertar]
+	@Clase VARCHAR(64)		--
+	,@Codigo VARCHAR(32)	--Valores para agregar articulo
+	,@Nombre VARCHAR(128)	--
+	,@Precio MONEY			--
+	,@IP VARCHAR(64) --Dirección ip para agregar al event log
+	,@User VARCHAR(16) --User utilizado para agregar al event log
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+	BEGIN TRY
+		--Estas variables se utilizan como identificadores para saber si el articulo se inserta o no
+		DECLARE @TipoAccion VARCHAR(128);
+		SET @TipoAccion='Insertar articulo exitoso'; --Si el articulo entra en algún if cambia a no exitoso
+		DECLARE @DescripcionError VARCHAR(128);
+		SET @DescripcionError=''	--Va a guardar el error en caso de que lo haya
+		DECLARE @Flag INT;
+		SET @Flag=0;	--Bandera que funciona como indicador de si se agregó o no
+		DECLARE @IdArticulo INT;
+		SET @IdArticulo=0; --Si no se puede agregar un articulo, indica que el ID de este es 0, para que no haya errores por FK
+
+		IF NOT EXISTS (SELECT 1 FROM dbo.Articulo WHERE Articulo.Nombre=@Nombre) --Se valida que no exista el mismo nombre
+		BEGIN
+			IF EXISTS (SELECT 1 FROM dbo.Articulo WHERE Articulo.Codigo=@Codigo) --Se valida si existe el mismo codigo
+			BEGIN
+				SET @TipoAccion='Insertar articulo no exitoso';
+				SET @DescripcionError='código de articulo duplicado';
+				SET @Flag=2;
+			END
+
+			ELSE --No existe, entonces se inserta el articulo
+			BEGIN
+				BEGIN TRANSACTION 
+					INSERT INTO dbo.Articulo
+					VALUES((SELECT A.id FROM ClaseArticulo A 
+					WHERE A.Nombre=@Clase)
+					,@Codigo
+					,@Nombre
+					,@Precio
+					,1)
+				
+				COMMIT TRANSACTION
+				SET @IdArticulo=(SELECT id FROM Articulo WHERE Articulo.Nombre=@Nombre);
+			END
+		END
+
+		ELSE --Si existe el nombre deseado
+		BEGIN
+			SET @TipoAccion='Insertar articulo no exitoso';
+			SET @DescripcionError='nombre de articulo duplicado';
+			SET @Flag=1;
+		END
+
+		INSERT INTO dbo.EventLog --Se realiza la inserción a la tabla EventLog
+			VALUES(
+				'{TipoAccion=<'+@TipoAccion
+				+'> Description=<'
+				+CAST(@IdArticulo AS VARCHAR(64))+'>,'
+				+'<'+CAST((SELECT C.id FROM ClaseArticulo C 
+				WHERE C.Nombre=@Clase) AS VARCHAR(64))+'>,'
+				+'<'+@Codigo+'>,'
+				+'<'+@Nombre+'>,'
+				+'<'+@DescripcionError+'>}'
+				, (SELECT id FROM Usuario WHERE Usuario.UserName = @User)
+				, @IP
+				, GETDATE())
+	SET NOCOUNT OFF;
+	RETURN @Flag; --Retorna la bandera para saber si se agregó o no.
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+		);
+	END CATCH
+
+END
