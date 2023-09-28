@@ -1,0 +1,49 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[FiltraClase]    Script Date: 27/09/2023 23:24:26 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[FiltraClase] 
+	@Clase VARCHAR(128)	--El valor de texto que se usa para filtrar la lista de artículos
+	,@IP VARCHAR(64) --Dirección ip para agregar al event log
+	,@User VARCHAR(16) --User utilizado para agregar al event log
+AS
+
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN TRY
+		SELECT A.Codigo 'Código'
+		, A.Nombre 'Artículo'
+		, B.Nombre 'Clase'
+		, A.Precio 'Precio'
+		FROM dbo.Articulo A INNER JOIN dbo.ClaseArticulo B ON A.idClaseArticulo = B.id
+		WHERE B.Nombre = @Clase AND A.EsActivo=1 --Se hace el filtrado tomando solo los articulos con el nombre de clase indicado
+		ORDER BY A.Nombre --Se hace el sort por nombre de forma ascendente
+		
+		INSERT INTO dbo.EventLog --Se realiza la inserción a la tabla EventLog
+			VALUES(
+				'{TipoAccion=<Consulta por clase de articulo> Description=<'+@Clase+'>}'
+				, (SELECT id FROM Usuario WHERE Usuario.UserName = @User)
+				, @IP
+				, GETDATE())
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+		);
+	END CATCH
+
+	SET NOCOUNT OFF;
+END
