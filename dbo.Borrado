@@ -1,0 +1,58 @@
+USE [Proyecto2]
+GO
+/****** Object:  StoredProcedure [dbo].[Borrado]    Script Date: 27/09/2023 23:21:59 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[Borrado]
+	@Codigo VARCHAR(32)
+	,@User VARCHAR(16) --Nombre de usuario para agregar al event log
+	,@IP VARCHAR(64) --Dirección ip para agregar al event log
+
+AS
+BEGIN
+
+	SET NOCOUNT OFF;
+	BEGIN TRY
+		BEGIN TRANSACTION
+			UPDATE dbo.Articulo
+			SET EsActivo=0
+			WHERE Codigo=@Codigo
+			
+			DECLARE @id INT = (SELECT A.id FROM Articulo A WHERE A.Codigo=@Codigo);
+			DECLARE @idClase INT = (SELECT A.IdClaseArticulo FROM Articulo A WHERE A.Codigo=@Codigo);
+			DECLARE @Nombre VARCHAR(128) = (SELECT A.Nombre FROM Articulo A WHERE A.Codigo=@Codigo);
+			DECLARE @Precio MONEY = (SELECT A.Precio FROM Articulo A WHERE A.Codigo=@Codigo);
+			INSERT INTO dbo.EventLog
+				VALUES(
+					'{TipoAccion=<'+'Borrado de articulo exitoso'+'> Description=<'
+					+CAST(@id AS VARCHAR(64))+'>,'
+					+'<'+CAST(@idClase AS VARCHAR(64))+'>,'
+					+'<'+@Codigo+'>,'
+					+'<'+@Nombre+'>,'
+					+'<'+CAST(@Precio AS VARCHAR(64))+'>}'
+					, (SELECT id FROM Usuario WHERE Usuario.UserName=@User)
+					, @IP
+					, GETDATE())
+			
+		COMMIT TRANSACTION
+	END TRY
+
+	BEGIN CATCH
+		INSERT INTO dbo.DBErrors	
+		VALUES (
+			SUSER_SNAME()
+			,ERROR_NUMBER()
+			,ERROR_STATE()
+			,ERROR_SEVERITY()
+			,ERROR_LINE()
+			,ERROR_PROCEDURE()
+			,ERROR_MESSAGE()
+			,GETDATE()
+			);
+	END CATCH
+
+	SET NOCOUNT ON;
+END
