@@ -1,0 +1,60 @@
+﻿body {
+    background-image: url('https://img.freepik.com/vector-premium/fondo-color-neutro-pastel-adorno-forma-simple-elegante_189483-153.jpg?w=2000');
+    background-repeat: no-repeat; 
+    background-attachment: fixed; 
+}
+
+.login {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8); 
+    width: 300px; 
+    padding: 20px; 
+    text-align: center; 
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
+}
+
+h1{
+    text-align: center;
+    color: fff;
+}
+
+input {
+    margin: auto;
+}
+
+/* Estilo para el formulario */
+form {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+}
+
+/* Estilo para etiquetas y campos de entrada */
+label, input {
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Estilo para el botón de inicio de sesión */
+button {
+    background-color: indianred;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+    button:hover {
+        background-color: lightsalmon;
+    }
+
+/* Estilo para el mensaje de error */
+.error-message {
+    color: red;
+}

@@ -1,0 +1,32 @@
+﻿@page
+@model Segunda_tarea_programada.Pages.Interfaz.LoginModel
+@{
+    ViewData["Title"] = "Inicio de Sesión";
+}
+
+<head>
+    <link rel="stylesheet" href="~/css/estilo_login.css" asp-append-version="true" />
+</head>
+
+<body>
+    <div class="login">
+        <h1>@ViewData["Title"]</h1>
+
+        <form method="post">
+            <div>
+                <label for="UserName">Nombre de Usuario:</label>
+                <input type="text" id="UserName" placeholder="Ingresar nombre" name="UserName" required />
+            </div>
+            <div>
+                <label for="Password">Contraseña:</label>
+                <input type="password" id="Password" placeholder="Ingresar contraseña" name="Password" required />
+            </div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+    </div>
+</body>
+
+@if (!string.IsNullOrEmpty(Model.errorMensaje))
+{
+    <p>@Model.errorMensaje</p>
+}

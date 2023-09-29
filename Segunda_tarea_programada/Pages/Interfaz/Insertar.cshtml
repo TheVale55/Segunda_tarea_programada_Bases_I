@@ -1,0 +1,65 @@
+﻿@page
+@model Segunda_tarea_programada.Pages.Interfaz.InsertarModel
+@{
+    ViewData["Title"] = "Insertar Artículo";
+}
+
+<head>
+    <link rel="stylesheet" href="~/css/estilo_articulos.css" asp-append-version="true" />
+</head>
+
+<body>
+    <h1>@ViewData["Title"]</h1>
+
+    @if (Model.errorMensaje.Length > 0)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>@Model.errorMensaje</strong>
+            <button type="button" class="btn_cerrar" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <form method="post">
+        <div>
+            <label for="Codigo">Código:</label>
+            <input type="text" id="Codigo" name="Codigo" required />
+        </div>
+        <div>
+            <label for="Nombre">Nombre:</label>
+            <input type="text" id="Nombre" name="Nombre" required />
+        </div>
+        <div>
+            <label for="Clase">Clase:</label>
+            <select id="Clase" name="Clase" required>
+                <option value="">Seleccionar Clase</option>
+                @foreach (var clase in Model.ListaClases)
+                {
+                    <option value="@clase.Nombre">@clase.Nombre</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="Precio">Precio:</label>
+            <input type="number" id="Precio" name="Precio" required />
+        </div>
+
+        @if (Model.mensajeExito.Length > 0)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>@Model.mensajeExito</strong>
+                <button type="button" class="btn-cerrar" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        }
+
+        <div>
+            <button type="button" id="btnCancelar" onclick="ArticuloRedireccion()">Cancelar</button>
+            <button type="submit" id="btnOK">OK</button>
+        </div>
+    </form>
+</body>
+
+<script>
+    function ArticuloRedireccion() {
+        window.location.href = "/Interfaz/Articulos"; // Cambia la URL según tu configuración
+    }
+</script>

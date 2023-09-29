@@ -1,0 +1,73 @@
+﻿/* Estilos para la página de artículos */
+body {
+    background-image: url('https://img.freepik.com/vector-premium/fondo-color-neutro-pastel-adorno-forma-simple-elegante_189483-153.jpg?w=2000');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+    font-size: 24px;
+    color: #333;
+}
+
+/* Estilos para los botones */
+button {
+    background-color: indianred;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 6px;
+    margin-bottom: 7px;
+}
+
+    button:hover {
+        background-color: lightsalmon;
+    }
+
+/* Estilos para la tabla de artículos */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+    table th, table td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    table th {
+        background-color: darksalmon;
+        color: #fff;
+    }
+
+/* Estilos para los formularios de búsqueda y filtrado */
+input[type="text"], input[type="number"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Estilos para los botones de CRUD */
+.crud-buttons {
+    margin-top: 20px;
+}
+
+/* Estilos para el botón de salida */
+.exit-button {
+    margin-top: 20px;
+}

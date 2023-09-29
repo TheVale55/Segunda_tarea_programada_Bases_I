@@ -1,0 +1,34 @@
+﻿@page
+@model Segunda_tarea_programada.Pages.Interfaz.CodigoModel
+@{
+    ViewData["Title"] = "Insertar Codigo";
+}
+
+<head>
+    <link rel="stylesheet" href="~/css/estilo_articulos.css" asp-append-version="true" />
+</head>
+
+<body>
+    <h1>@ViewData["Title"]</h1>
+
+    <form method="post">
+        <div>
+            <label for="Codigo">Código:</label>
+            <input type="text" id="Codigo" name="Codigo" required />
+            <input type="hidden" name="Accion" value="editar" />
+            <button type="submit" id="btnOK">OK</button>
+        </div>
+    </form>
+
+    <div>
+        <button type="button" id="btnCancelar" onclick="ArticuloRedireccion()">Cancelar</button>
+        
+    </div>
+
+</body>
+
+<script>
+    function ArticuloRedireccion() {
+        window.location.href = "/Interfaz/Articulos"; // Cambia la URL según tu configuración
+    }
+</script>

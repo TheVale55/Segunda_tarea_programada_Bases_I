@@ -1,0 +1,133 @@
+﻿@page
+@model Segunda_tarea_programada.Pages.Interfaz.ArticulosModel
+@{
+    ViewData["Title"] = "Lista de Artículos";
+}
+
+<head>
+    <link rel="stylesheet" href="~/css/estilo_articulos.css" asp-append-version="true" />
+</head>
+
+<body>
+    <h1>@ViewData["Title"]</h1>
+
+    <!-- Botones de búsqueda y filtrado -->
+    <div class="Filtrado">
+        <form method="post" asp-page-handler="FiltrarPorNombre">
+            <!-- Utiliza asp-page-handler para especificar el método en Razor Pages -->
+            <div class="Filtrar-Por-Nombre">
+                <input id="NombreFiltro" type="text" name="Nombre" placeholder="Insertar Nombre" />
+                <button type="submit" onclick="filtrar()">Filtrar por Nombre</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="FiltrarPorCantidad">
+            <div class="Filtrar-Cantidad">
+                <input id="Cantidad" type="number" name="Cantidad" placeholder="Insertar Cantidad" />
+                <button type="submit" onclick="filtrar()">Filtrar por cantidad</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="FiltrarPorClase">
+            <div class="Filtrar-Clase">
+                <select id="ClaseSelect" name="Clase">
+                    <option value="">Seleccionar Clase</option>
+                    @foreach (var clase in Model.ListaClases)
+                    {
+                        <option value="@clase.Nombre">@clase.Nombre</option>
+                    }
+                </select>
+                <button type="submit" onclick="filtrar()">Filtrar por Clase</button>
+            </div>
+        </form>
+
+    <!-- Tabla para mostrar la lista de artículos -->
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Artículo</th>
+                <th>Clase</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.MostrarTablaCompleta)
+            {
+                @foreach (var item in Model.ListaArticulos)
+                {
+                    <tr>
+                        <td>@item.Codigo</td>
+                        <td>@item.Articulo</td>
+                        <td>@item.Clase</td>
+                        <td>@item.Precio.ToString("0.00")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                @foreach (var item in Model.ListaFiltrada)
+                {
+                    <tr>
+                        <td>@item.Codigo</td>
+                        <td>@item.Articulo</td>
+                        <td>@item.Clase</td>
+                        <td>@item.Precio.ToString("0.00")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <!-- Botones CRUD -->
+    <div>
+        <button type="button" onclick="insertarRedireccion()">Agregar Artículo</button>
+        <button type="button" onclick="codigoRedireccion()">Editar Artículo</button>
+        <button type="button" onclick="eliminarRedireccion()">Eliminar Artículo</button>
+    </div>
+
+    <!-- Botón de salida -->
+    <div>
+            <button type="button" onclick="salirRedireccion()">Salir</button>
+    </div>
+</body>
+
+<script>
+    function insertarRedireccion() {
+        window.location.href = "/Interfaz/Insertar"; // Cambia la URL según tu configuración
+    }
+
+    function codigoRedireccion() {
+        window.location.href = "/Interfaz/Codigo";
+    }
+
+    function eliminarRedireccion() {
+        window.location.href = "/Interfaz/Eliminar";
+    }
+
+    function salirRedireccion() {
+        window.location.href = "/Interfaz/Login";
+    }
+
+    function filtrar() {
+
+    var claseSelect = document.getElementById("ClaseSelect");
+    var selectedValue = claseSelect.value;
+
+    if (selectedValue) {
+        
+        console.log("Valor seleccionado:", selectedValue);
+        @Model.MostrarTablaCompleta = false; 
+            } else {
+               
+                console.log("Ninguna opción seleccionada.");
+                @Model.MostrarTablaCompleta = true; 
+            }
+
+    location.reload();
+    }
+
+
+
+</script>
+
